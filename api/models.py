@@ -1,5 +1,6 @@
 from django.db import models
 from datetime import datetime
+from django.utils import timezone
 class UserAbstract(models.Model):
     email = models.CharField(max_length=255,default="")
     password = models.CharField(max_length=255,default="")

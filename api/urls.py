@@ -5,6 +5,7 @@ urlpatterns =[
     path("userRegister",UserRegisterView.as_view()),
     path("userLogin",UserLoginView.as_view()),
     path("user",UserView.as_view()),
+    path("userRestPass",UserResetPassView.as_view()),
     path("adminRegister",SuperAdminRegisterView.as_view()),
     path("adminLogin",SuperAdminLoginView.as_view()),
     path("admin",SuperAdminView.as_view()),

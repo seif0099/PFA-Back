@@ -2,11 +2,10 @@ from rest_framework import status
 from rest_framework.views import APIView
 from .serializers import *
 from rest_framework.response import Response
-from rest_framework.exceptions import AuthenticationFailed
 from .models import *
 import jwt,datetime
 from django.contrib.auth.hashers import make_password, check_password
-
+from django.core.mail import EmailMessage
 ############################################## -- LOGOUT VIEW -- #########################################
 
 class LogoutView(APIView):
@@ -59,7 +58,7 @@ class UserLoginView(APIView):
 
 class UserView(APIView):
     def get(self,request):
-        token = request.COOKIES.get('jwt')
+        token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -71,7 +70,7 @@ class UserView(APIView):
         return Response(serializer.data,status=status.HTTP_200_OK)
 
     def put(self,request):
-        token = request.COOKIES.get('jwt')
+        token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -89,6 +88,43 @@ class UserView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserResetPassView(APIView):
+    def post(self, request):
+        email = request.data['email']
+        user = User.objects.filter(email=email).first()
+        if user is None:
+            return Response({"message":"User does not exist !"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        email = EmailMessage(
+            subject="Reset Password",
+            body="You can follow this link to reset your password : http://localhost:3000/user/resetPass?uid={}".format(user.id),
+            from_email='JOB-BOARD <mohamedamine.khemiri@sesame.com.tn>',
+            to=[email],
+        )
+
+        # send the email
+        email.send()
+        return Response({"message": "Check your Email !"}, status=status.HTTP_200_OK)
+    def patch(self,request):
+        uid = request.GET.get('uid')
+        user=User.objects.filter(id=uid).first()
+        if user is None:
+            return Response({"message":"User does not exist !"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            if(request.data['password']):
+                request.data['password']=make_password(request.data['password'])
+        except:
+            pass
+        serializer = UserSerializer(user,data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message":"Password was changed !"}, status=status.HTTP_200_OK)
+        return Response({"message":"Try later !"}, status=status.HTTP_400_BAD_REQUEST)
+
+
         
 
 
@@ -133,7 +169,7 @@ class SuperAdminLoginView(APIView):
 
 class SuperAdminView(APIView):
     def get(self,request):
-        token = request.COOKIES.get('jwt')
+        token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -145,7 +181,7 @@ class SuperAdminView(APIView):
         return Response(serializer.data,status=status.HTTP_200_OK)
 
     def put(self,request):
-        token = request.COOKIES.get('jwt')
+        token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -166,7 +202,7 @@ class SuperAdminView(APIView):
 
 class SuperAdminGetAllUsersView(APIView):
     def get(self,request):
-        token=request.COOKIES.get('jwt')
+        token=request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -181,7 +217,7 @@ class SuperAdminGetAllUsersView(APIView):
 
 class SuperAdminGetAllCompaniesView(APIView):
     def get(self,request):
-        token=request.COOKIES.get('jwt')
+        token=request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -197,7 +233,7 @@ class SuperAdminGetAllCompaniesView(APIView):
 
 class SuperAdminManageUserView(APIView):
     def get(self,request):
-        token=request.COOKIES.get('jwt')
+        token=request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -214,7 +250,7 @@ class SuperAdminManageUserView(APIView):
         return Response({"message":"User Does Not Exist"},status=status.HTTP_400_BAD_REQUEST)
     
     def put(self,request):
-        token=request.COOKIES.get('jwt')
+        token=request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -239,7 +275,7 @@ class SuperAdminManageUserView(APIView):
         return Response({"message":"User Does Not Exist"},status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self,request):
-        token=request.COOKIES.get('jwt')
+        token=request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -258,7 +294,7 @@ class SuperAdminManageUserView(APIView):
 
 class SuperAdminManageCompanyAdminView(APIView):
     def get(self,request):
-        token=request.COOKIES.get('jwt')
+        token=request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -275,7 +311,7 @@ class SuperAdminManageCompanyAdminView(APIView):
         return Response({"message":"Company Does Not Exist"},status=status.HTTP_400_BAD_REQUEST)
     
     def put(self,request):
-        token=request.COOKIES.get('jwt')
+        token=request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -300,7 +336,7 @@ class SuperAdminManageCompanyAdminView(APIView):
         return Response({"message":"Company Does Not Exist"},status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self,request):
-        token=request.COOKIES.get('jwt')
+        token=request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -359,7 +395,7 @@ class CompanyAdminLoginView(APIView):
 
 class CompanyAdminView(APIView):
     def get(self,request):
-        token = request.COOKIES.get('jwt')
+        token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -371,7 +407,7 @@ class CompanyAdminView(APIView):
         return Response(serializer.data,status=status.HTTP_200_OK)
 
     def put(self,request):
-        token = request.COOKIES.get('jwt')
+        token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -395,7 +431,7 @@ class CompanyAdminView(APIView):
 ############################################## -- OFFRE VIEWS -- #########################################
 class OffresView(APIView):
     def get(self,request):
-        token = request.COOKIES.get('jwt')
+        token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -408,7 +444,7 @@ class OffresView(APIView):
 
 class OffreView(APIView):
     def get(self,request):
-        token = request.COOKIES.get('jwt')
+        token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -423,7 +459,7 @@ class OffreView(APIView):
         return Response({"message":"Offre Does Not Exist"},status=status.HTTP_400_BAD_REQUEST)
 
     def post(self,request):
-        token = request.COOKIES.get('jwt')
+        token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -440,7 +476,7 @@ class OffreView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def put(self,request):
-        token=request.COOKIES.get('jwt')
+        token=request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -459,7 +495,7 @@ class OffreView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response({"message":"Offre Does Not Exist"},status=status.HTTP_400_BAD_REQUEST)
     def delete(self,request):
-        token=request.COOKIES.get('jwt')
+        token=request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -480,7 +516,7 @@ class OffreView(APIView):
 
 class PostuleOffreUserView(APIView):
     def get(self,request):
-        token = request.COOKIES.get('jwt')
+        token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -501,7 +537,7 @@ class PostuleOffreUserView(APIView):
         return Response({"message":"User Does Not Have any Offer"},status=status.HTTP_400_BAD_REQUEST)
 
     def post(self,request):
-        token = request.COOKIES.get('jwt')
+        token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -522,7 +558,7 @@ class PostuleOffreUserView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self,request):
-        token = request.COOKIES.get('jwt')
+        token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -541,7 +577,7 @@ class PostuleOffreUserView(APIView):
 
 class PostuleOffreCompanyView(APIView):
     def get(self,request):
-        token = request.COOKIES.get('jwt')
+        token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -558,7 +594,7 @@ class PostuleOffreCompanyView(APIView):
         return Response({"message":"User Does Not Have any Offer"},status=status.HTTP_400_BAD_REQUEST)
 
     def put(self,request):
-        token = request.COOKIES.get('jwt')
+        token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
