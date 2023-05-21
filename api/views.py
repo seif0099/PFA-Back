@@ -6,6 +6,7 @@ from .models import *
 import jwt,datetime
 from django.contrib.auth.hashers import make_password, check_password
 from django.core.mail import EmailMessage
+from .crypt import *
 ############################################## -- LOGOUT VIEW -- #########################################
 
 class LogoutView(APIView):
@@ -96,23 +97,30 @@ class UserResetPassView(APIView):
         user = User.objects.filter(email=email).first()
         if user is None:
             return Response({"message":"User does not exist !"}, status=status.HTTP_400_BAD_REQUEST)
-            
+        cryptetId = encrypt_string(str(user.id))
+        cryptetId = cryptetId.decode('utf-8')
         email = EmailMessage(
             subject="Reset Password",
-            body="You can follow this link to reset your password : http://localhost:3000/user/resetPass?uid={}".format(user.id),
+            body="You can follow this link to reset your password : http://localhost:3000/user/resetPass?uid={}".format(cryptetId),
             from_email='JOB-BOARD <mohamedamine.khemiri@sesame.com.tn>',
             to=[email],
         )
-
-        # send the email
-        email.send()
+        try:
+            # send the email
+            email.send()
+        except:
+            return Response({"message":"Try later !"}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"message": "Check your Email !"}, status=status.HTTP_200_OK)
     def patch(self,request):
         uid = request.GET.get('uid')
+        try:
+            uid=uid.encode('utf-8')
+            uid=decrypt_string(uid)
+        except:
+            return Response({"message":"User does not exist !"}, status=status.HTTP_400_BAD_REQUEST)
         user=User.objects.filter(id=uid).first()
         if user is None:
             return Response({"message":"User does not exist !"}, status=status.HTTP_400_BAD_REQUEST)
-
         try:
             if(request.data['password']):
                 request.data['password']=make_password(request.data['password'])
