@@ -47,6 +47,7 @@ class Offre(models.Model):
     typee = models.CharField(max_length=255,default="")
     Experience = models.IntegerField(default=0)
     adresse=models.CharField(max_length=255,default="")
+    image = models.ImageField(upload_to="images/jobs/",default="")
     deadLine = models.DateField(default=datetime.today().strftime("%Y-%m-%d"))
     entreprise = models.ForeignKey(to=CompanyAdmin,on_delete=models.CASCADE,null=True)
     postules=models.ManyToManyField(to=User,through="PostuleOffre",through_fields=("offre","user"))
