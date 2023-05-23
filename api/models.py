@@ -45,7 +45,7 @@ class Offre(models.Model):
     description=models.TextField(default="")
     salaire = models.DecimalField(max_digits=10,decimal_places=2,default=0)
     typee = models.CharField(max_length=255,default="")
-    Experience = models.IntegerField(default=0)
+    experience = models.IntegerField(default=0)
     adresse=models.CharField(max_length=255,default="")
     image = models.ImageField(upload_to="images/jobs/",default="")
     deadLine = models.DateField(default=datetime.today().strftime("%Y-%m-%d"))
