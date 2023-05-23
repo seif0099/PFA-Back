@@ -16,6 +16,7 @@ urlpatterns =[
     path("companyRegister",CompanyAdminRegisterView.as_view()),
     path("companyLogin",CompanyAdminLoginView.as_view()),
     path("company",CompanyAdminView.as_view()),
+    path("companyResetPass",CompanyResetPassView.as_view()),
     path("offres",OffresView.as_view()),
     path("offre",OffreView.as_view()),
     path("postuleOffreUser",PostuleOffreUserView.as_view()),
