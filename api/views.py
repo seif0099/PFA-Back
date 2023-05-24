@@ -379,7 +379,7 @@ class SuperAdminManageCompanyAdminView(APIView):
 
 class  CompanyAdminRegisterView(APIView):
     def post(self,request):
-        request.data._mutable=True 
+        request.data._mutable=True  
         if CompanyAdmin.objects.filter(email=request.data['email']).exists():
             return Response({"message":"User already exist"},status=status.HTTP_400_BAD_REQUEST)
         request.data['password'] = make_password(request.data['password'])

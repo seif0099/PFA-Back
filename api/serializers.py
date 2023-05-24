@@ -62,7 +62,7 @@ class CompanyAdminSerializer(serializers.ModelSerializer):
         # Change the name of the uploaded files
         if image:
             image_ext = image.name.split('.')[-1]
-            image_name = f"{offre.id}.{image_ext}"
+            image_name = f"{company.id}.{image_ext}"
             company.image.save(image_name, image)
 
         return company
