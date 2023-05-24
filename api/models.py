@@ -50,7 +50,7 @@ class Offre(models.Model):
     adresse=models.CharField(max_length=255,default="",null=True)
     deadLine = models.DateField(default=datetime.today().strftime("%Y-%m-%d"),null=True)
     entreprise = models.ForeignKey(to=CompanyAdmin,on_delete=models.CASCADE,null=True)
-    postules=models.ManyToManyField(to=User,through="PostuleOffre",through_fields=("offre","user"),null=True)
+    postules=models.ManyToManyField(to=User,through="PostuleOffre",through_fields=("offre","user"))
     class Meta:
         ordering=['titre']
         db_table='offres'

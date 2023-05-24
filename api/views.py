@@ -11,7 +11,7 @@ from .crypt import *
 
 class LogoutView(APIView):
     def post(self,request):
-        request.data._mutable=True 
+        data=request.data.copy() 
         response=Response(status=status.HTTP_200_OK)
         response.delete_cookie('jwt')
         response.data={
@@ -23,11 +23,11 @@ class LogoutView(APIView):
 
 class UserRegisterView(APIView):
     def post(self,request):
-        request.data._mutable=True 
-        if User.objects.filter(email=request.data['email']).exists():
+        data=request.data.copy() 
+        if User.objects.filter(email=data['email']).exists():
             return Response({"message":"User already exist"},status=status.HTTP_400_BAD_REQUEST)
-        request.data['password'] = make_password(request.data['password'])
-        serializer = UserSerializer(data=request.data)
+        data['password'] = make_password(data['password'])
+        serializer = UserSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -35,9 +35,9 @@ class UserRegisterView(APIView):
 
 class UserLoginView(APIView):
     def post(self,request):
-        request.data._mutable=True 
-        email = request.data['email']
-        password = request.data['password']
+        data=request.data.copy() 
+        email = data['email']
+        password = data['password']
 
         user = User.objects.filter(email=email).first()
         if user is None:
@@ -74,7 +74,7 @@ class UserView(APIView):
         return Response(serializer.data,status=status.HTTP_200_OK)
 
     def put(self,request):
-        request.data._mutable=True 
+        data=request.data.copy() 
         token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -84,11 +84,11 @@ class UserView(APIView):
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         user=User.objects.filter(id=payload['id']).first()
         try:
-            if(request.data['password']):
-                request.data['password']=make_password(request.data['password'])
+            if(data['password']):
+                data['password']=make_password(data['password'])
         except:
             pass
-        serializer = UserSerializer(user,data=request.data)
+        serializer = UserSerializer(user,data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -97,8 +97,8 @@ class UserView(APIView):
 
 class UserResetPassView(APIView):
     def post(self, request):
-        request.data._mutable=True 
-        email = request.data['email']
+        data=request.data.copy()
+        email = data['email']
         user = User.objects.filter(email=email).first()
         if user is None:
             return Response({"message":"User does not exist !"}, status=status.HTTP_400_BAD_REQUEST)
@@ -117,7 +117,7 @@ class UserResetPassView(APIView):
             return Response({"message":"Try later !"}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"message": "Check your Email !"}, status=status.HTTP_200_OK)
     def patch(self,request):
-        request.data._mutable=True 
+        data=request.data.copy()
         uid = request.GET.get('uid')
         try:
             uid=uid.encode('utf-8')
@@ -128,11 +128,11 @@ class UserResetPassView(APIView):
         if user is None:
             return Response({"message":"User does not exist !"}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            if(request.data['password']):
-                request.data['password']=make_password(request.data['password'])
+            if(data['password']):
+                data['password']=make_password(data['password'])
         except:
             pass
-        serializer = UserSerializer(user,data=request.data)
+        serializer = UserSerializer(user,data=data)
         if serializer.is_valid():
             serializer.save()
             return Response({"message":"Password was changed !"}, status=status.HTTP_200_OK)
@@ -146,11 +146,11 @@ class UserResetPassView(APIView):
 
 class SuperAdminRegisterView(APIView):
     def post(self,request):
-        request.data._mutable=True 
-        if SuperAdmin.objects.filter(email=request.data['email']).exists():
+        data=request.data.copy() 
+        if SuperAdmin.objects.filter(email=data['email']).exists():
             return Response({"message":"User already exist"},status=status.HTTP_400_BAD_REQUEST)
-        request.data['password'] = make_password(request.data['password'])
-        serializer = SuperAdminSerializer(data=request.data)
+        data['password'] = make_password(data['password'])
+        serializer = SuperAdminSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -159,9 +159,9 @@ class SuperAdminRegisterView(APIView):
 
 class SuperAdminLoginView(APIView):
     def post(self,request):
-        request.data._mutable=True 
-        email = request.data['email']
-        password = request.data['password']
+        data=request.data.copy() 
+        email = data['email']
+        password = data['password']
 
         super_admin = SuperAdmin.objects.filter(email=email).first()
         if super_admin is None:
@@ -197,7 +197,7 @@ class SuperAdminView(APIView):
         return Response(serializer.data,status=status.HTTP_200_OK)
 
     def put(self,request):
-        request.data._mutable=True 
+        data=request.data.copy() 
         token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -207,11 +207,11 @@ class SuperAdminView(APIView):
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         super_admin=SuperAdmin.objects.filter(id=payload['id']).first()
         try:
-            if(request.data['password']):
-                request.data['password']=make_password(request.data['password'])
+            if(data['password']):
+                data['password']=make_password(data['password'])
         except:
             pass
-        serializer = SuperAdminSerializer(super_admin,data=request.data)
+        serializer = SuperAdminSerializer(super_admin,data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -267,7 +267,7 @@ class SuperAdminManageUserView(APIView):
         return Response({"message":"User Does Not Exist"},status=status.HTTP_400_BAD_REQUEST)
     
     def put(self,request):
-        request.data._mutable=True 
+        data=request.data.copy() 
         token=request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -281,11 +281,11 @@ class SuperAdminManageUserView(APIView):
         if(User.objects.filter(id=userId).exists()):
             user=User.objects.filter(id=userId).first()
             try:
-                if(request.data['password']):
-                    request.data['password']=make_password(request.data['password'])
+                if(data['password']):
+                    data['password']=make_password(data['password'])
             except:
                 pass
-            serializer = UserSerializer(user,data=request.data)
+            serializer = UserSerializer(user,data=data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
@@ -293,7 +293,7 @@ class SuperAdminManageUserView(APIView):
         return Response({"message":"User Does Not Exist"},status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self,request):
-        request.data._mutable=True 
+        data=request.data.copy() 
         token=request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -330,7 +330,7 @@ class SuperAdminManageCompanyAdminView(APIView):
         return Response({"message":"Company Does Not Exist"},status=status.HTTP_400_BAD_REQUEST)
     
     def put(self,request):
-        request.data._mutable=True 
+        data=request.data.copy()
         token=request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -344,11 +344,11 @@ class SuperAdminManageCompanyAdminView(APIView):
         if(CompanyAdmin.objects.filter(id=companyAdminId).exists()):
             company_admin=CompanyAdmin.objects.filter(id=companyAdminId).first()
             try:
-                if(request.data['password']):
-                    request.data['password']=make_password(request.data['password'])
+                if(data['password']):
+                    data['password']=make_password(data['password'])
             except:
                 pass
-            serializer = CompanyAdminSerializer(company_admin,data=request.data)
+            serializer = CompanyAdminSerializer(company_admin,data=data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
@@ -356,7 +356,7 @@ class SuperAdminManageCompanyAdminView(APIView):
         return Response({"message":"Company Does Not Exist"},status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self,request):
-        request.data._mutable=True 
+        data=request.data.copy()
         token=request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -379,11 +379,11 @@ class SuperAdminManageCompanyAdminView(APIView):
 
 class  CompanyAdminRegisterView(APIView):
     def post(self,request):
-        request.data._mutable=True  
-        if CompanyAdmin.objects.filter(email=request.data['email']).exists():
+        data=request.data.copy() 
+        if CompanyAdmin.objects.filter(email=data['email']).exists():
             return Response({"message":"User already exist"},status=status.HTTP_400_BAD_REQUEST)
-        request.data['password'] = make_password(request.data['password'])
-        serializer =  CompanyAdminSerializer(data=request.data)
+        data['password'] = make_password(data['password'])
+        serializer =  CompanyAdminSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -392,10 +392,9 @@ class  CompanyAdminRegisterView(APIView):
 
 class CompanyAdminLoginView(APIView):
     def post(self,request):
-        request.data._mutable=True 
-        email = request.data['email']
-        password = request.data['password']
-
+        data=request.data.copy()
+        email = data['email']
+        password = data['password']
         company_admin = CompanyAdmin.objects.filter(email=email).first()
         if company_admin is None:
             return Response({"message":"Incorrect email or password"}, status=status.HTTP_400_BAD_REQUEST)
@@ -430,7 +429,7 @@ class CompanyAdminView(APIView):
         return Response(serializer.data,status=status.HTTP_200_OK)
 
     def put(self,request):
-        request.data._mutable=True 
+        data=request.data.copy() 
         token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -440,19 +439,19 @@ class CompanyAdminView(APIView):
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         company_admin=CompanyAdmin.objects.filter(id=payload['id']).first()
         try:
-            if(request.data['password']):
-                request.data['password']=make_password(request.data['password'])
+            if(data['password']):
+                data['password']=make_password(data['password'])
         except:
             pass
-        serializer = CompanyAdminSerializer(company_admin,data=request.data)
+        serializer = CompanyAdminSerializer(company_admin,data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 class CompanyResetPassView(APIView):
     def post(self, request):
-        request.data._mutable=True 
-        email = request.data['email']
+        data=request.data.copy()
+        email = data['email']
         company = CompanyAdmin.objects.filter(email=email).first()
         if company is None:
             return Response({"message":"Company does not exist !"}, status=status.HTTP_400_BAD_REQUEST)
@@ -471,7 +470,7 @@ class CompanyResetPassView(APIView):
             return Response({"message":"Try later !"}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"message": "Check your Email !"}, status=status.HTTP_200_OK)
     def patch(self,request):
-        request.data._mutable=True
+        data=request.data.copy()
         uid = request.GET.get('uid')
         try:
             uid=uid.encode('utf-8')
@@ -482,11 +481,11 @@ class CompanyResetPassView(APIView):
         if user is None:
             return Response({"message":"Company does not exist !"}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            if(request.data['password']):
-                request.data['password']=make_password(request.data['password'])
+            if(data['password']):
+                data['password']=make_password(data['password'])
         except:
             pass
-        serializer = CompanyAdminSerializer(company,data=request.data)
+        serializer = CompanyAdminSerializer(company,data=data)
         if serializer.is_valid():
             serializer.save()
             return Response({"message":"Password was changed !"}, status=status.HTTP_200_OK)
@@ -525,7 +524,7 @@ class OffreView(APIView):
         return Response({"message":"Offre Does Not Exist"},status=status.HTTP_400_BAD_REQUEST)
 
     def post(self,request):
-        request.data._mutable=True
+        data=request.data.copy()
         token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -535,15 +534,15 @@ class OffreView(APIView):
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         if payload['typeUser'] != 'company':
             return Response({"message":"Permission Denied"}, status=status.HTTP_403_FORBIDDEN)
-        request.data['entreprise']=payload['id']
-        serializer = OffreSerializer(data=request.data)
+        data['entreprise']=payload['id']
+        serializer = OffreSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data,status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def put(self,request):
-        request.data._mutable=True
+        data=request.data.copy()
         token=request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -556,14 +555,14 @@ class OffreView(APIView):
         offreId = request.GET.get("id")
         if(Offre.objects.filter(id=offreId).exists()):
             offre=Offre.objects.filter(id=offreId).first()
-            serializer = OffreSerializer(offre,data=request.data)
+            serializer = OffreSerializer(offre,data=data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response({"message":"Offre Does Not Exist"},status=status.HTTP_400_BAD_REQUEST)
     def delete(self,request):
-        request.data._mutable=True
+        data=request.data.copy()
         token=request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -606,7 +605,7 @@ class PostuleOffreUserView(APIView):
         return Response({"message":"User Does Not Have any Offer"},status=status.HTTP_400_BAD_REQUEST)
 
     def post(self,request):
-        request.data._mutable=True
+        data=request.data.copy()
         token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -619,16 +618,16 @@ class PostuleOffreUserView(APIView):
         offreId = request.GET.get("id")
         if(PostuleOffre.objects.filter(user=payload["id"],offre=offreId).exists()):
             return Response({"message":"User already applied to this offer"},status=status.HTTP_400_BAD_REQUEST)
-        request.data["user"]=payload["id"]
-        request.data["offre"]=offreId
-        serializer = PostuleOffreSerializer(data=request.data)
+        data["user"]=payload["id"]
+        data["offre"]=offreId
+        serializer = PostuleOffreSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data,status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self,request):
-        request.data._mutable=True
+        data=request.data.copy()
         token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -665,7 +664,7 @@ class PostuleOffreCompanyView(APIView):
         return Response({"message":"User Does Not Have any Offer"},status=status.HTTP_400_BAD_REQUEST)
 
     def put(self,request):
-        request.data._mutable=True 
+        data=request.data.copy()
         token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -678,8 +677,8 @@ class PostuleOffreCompanyView(APIView):
         offrePostuleId = request.GET.get("id")
         if(PostuleOffre.objects.filter(id=offrePostuleId).exists()):
             offre=PostuleOffre.objects.filter(id=offrePostuleId).first()
-            request.data['etat']=True
-            serializer = PostuleOffreSerializer(offre,data=request.data)
+            data['etat']=True
+            serializer = PostuleOffreSerializer(offre,data=data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
