@@ -52,25 +52,25 @@ class CompanyAdminSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'password': {'write_only': True}
         }
-
-class OffreSerializer(serializers.ModelSerializer):
-    class Meta:
-        model=Offre
-        fields = "__all__"
     def create(self, validated_data):
         # Get the uploaded files from validated_data
         image = validated_data.pop('image', None)
 
         # Call the superclass create method to create the offre instance
-        offre = super().create(validated_data)
+        company = super().create(validated_data)
 
         # Change the name of the uploaded files
         if image:
             image_ext = image.name.split('.')[-1]
             image_name = f"{offre.id}.{image_ext}"
-            offre.image.save(image_name, image)
+            company.image.save(image_name, image)
 
-        return offre
+        return company
+
+class OffreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Offre
+        fields = "__all__"
 
 class PostuleOffreSerializer(serializers.ModelSerializer):
     class Meta:

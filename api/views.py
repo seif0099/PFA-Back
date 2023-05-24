@@ -11,6 +11,7 @@ from .crypt import *
 
 class LogoutView(APIView):
     def post(self,request):
+        request.data._mutable=True 
         response=Response(status=status.HTTP_200_OK)
         response.delete_cookie('jwt')
         response.data={
@@ -22,6 +23,7 @@ class LogoutView(APIView):
 
 class UserRegisterView(APIView):
     def post(self,request):
+        request.data._mutable=True 
         if User.objects.filter(email=request.data['email']).exists():
             return Response({"message":"User already exist"},status=status.HTTP_400_BAD_REQUEST)
         request.data['password'] = make_password(request.data['password'])
@@ -33,6 +35,7 @@ class UserRegisterView(APIView):
 
 class UserLoginView(APIView):
     def post(self,request):
+        request.data._mutable=True 
         email = request.data['email']
         password = request.data['password']
 
@@ -71,6 +74,7 @@ class UserView(APIView):
         return Response(serializer.data,status=status.HTTP_200_OK)
 
     def put(self,request):
+        request.data._mutable=True 
         token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -93,6 +97,7 @@ class UserView(APIView):
 
 class UserResetPassView(APIView):
     def post(self, request):
+        request.data._mutable=True 
         email = request.data['email']
         user = User.objects.filter(email=email).first()
         if user is None:
@@ -112,6 +117,7 @@ class UserResetPassView(APIView):
             return Response({"message":"Try later !"}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"message": "Check your Email !"}, status=status.HTTP_200_OK)
     def patch(self,request):
+        request.data._mutable=True 
         uid = request.GET.get('uid')
         try:
             uid=uid.encode('utf-8')
@@ -140,6 +146,7 @@ class UserResetPassView(APIView):
 
 class SuperAdminRegisterView(APIView):
     def post(self,request):
+        request.data._mutable=True 
         if SuperAdmin.objects.filter(email=request.data['email']).exists():
             return Response({"message":"User already exist"},status=status.HTTP_400_BAD_REQUEST)
         request.data['password'] = make_password(request.data['password'])
@@ -152,6 +159,7 @@ class SuperAdminRegisterView(APIView):
 
 class SuperAdminLoginView(APIView):
     def post(self,request):
+        request.data._mutable=True 
         email = request.data['email']
         password = request.data['password']
 
@@ -189,6 +197,7 @@ class SuperAdminView(APIView):
         return Response(serializer.data,status=status.HTTP_200_OK)
 
     def put(self,request):
+        request.data._mutable=True 
         token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -258,6 +267,7 @@ class SuperAdminManageUserView(APIView):
         return Response({"message":"User Does Not Exist"},status=status.HTTP_400_BAD_REQUEST)
     
     def put(self,request):
+        request.data._mutable=True 
         token=request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -283,6 +293,7 @@ class SuperAdminManageUserView(APIView):
         return Response({"message":"User Does Not Exist"},status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self,request):
+        request.data._mutable=True 
         token=request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -319,6 +330,7 @@ class SuperAdminManageCompanyAdminView(APIView):
         return Response({"message":"Company Does Not Exist"},status=status.HTTP_400_BAD_REQUEST)
     
     def put(self,request):
+        request.data._mutable=True 
         token=request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -344,6 +356,7 @@ class SuperAdminManageCompanyAdminView(APIView):
         return Response({"message":"Company Does Not Exist"},status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self,request):
+        request.data._mutable=True 
         token=request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -366,6 +379,7 @@ class SuperAdminManageCompanyAdminView(APIView):
 
 class  CompanyAdminRegisterView(APIView):
     def post(self,request):
+        request.data._mutable=True 
         if CompanyAdmin.objects.filter(email=request.data['email']).exists():
             return Response({"message":"User already exist"},status=status.HTTP_400_BAD_REQUEST)
         request.data['password'] = make_password(request.data['password'])
@@ -378,6 +392,7 @@ class  CompanyAdminRegisterView(APIView):
 
 class CompanyAdminLoginView(APIView):
     def post(self,request):
+        request.data._mutable=True 
         email = request.data['email']
         password = request.data['password']
 
@@ -415,6 +430,7 @@ class CompanyAdminView(APIView):
         return Response(serializer.data,status=status.HTTP_200_OK)
 
     def put(self,request):
+        request.data._mutable=True 
         token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -435,6 +451,7 @@ class CompanyAdminView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 class CompanyResetPassView(APIView):
     def post(self, request):
+        request.data._mutable=True 
         email = request.data['email']
         company = CompanyAdmin.objects.filter(email=email).first()
         if company is None:
@@ -454,6 +471,7 @@ class CompanyResetPassView(APIView):
             return Response({"message":"Try later !"}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"message": "Check your Email !"}, status=status.HTTP_200_OK)
     def patch(self,request):
+        request.data._mutable=True
         uid = request.GET.get('uid')
         try:
             uid=uid.encode('utf-8')
@@ -507,6 +525,7 @@ class OffreView(APIView):
         return Response({"message":"Offre Does Not Exist"},status=status.HTTP_400_BAD_REQUEST)
 
     def post(self,request):
+        request.data._mutable=True
         token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -524,6 +543,7 @@ class OffreView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def put(self,request):
+        request.data._mutable=True
         token=request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -543,6 +563,7 @@ class OffreView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response({"message":"Offre Does Not Exist"},status=status.HTTP_400_BAD_REQUEST)
     def delete(self,request):
+        request.data._mutable=True
         token=request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -585,6 +606,7 @@ class PostuleOffreUserView(APIView):
         return Response({"message":"User Does Not Have any Offer"},status=status.HTTP_400_BAD_REQUEST)
 
     def post(self,request):
+        request.data._mutable=True
         token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -606,6 +628,7 @@ class PostuleOffreUserView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self,request):
+        request.data._mutable=True
         token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -642,6 +665,7 @@ class PostuleOffreCompanyView(APIView):
         return Response({"message":"User Does Not Have any Offer"},status=status.HTTP_400_BAD_REQUEST)
 
     def put(self,request):
+        request.data._mutable=True 
         token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)

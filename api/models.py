@@ -35,6 +35,7 @@ class CompanyAdmin(UserAbstract):
     telephone=models.CharField(max_length=25,default="",null=True)
     siteWeb=models.CharField(max_length=255,default="",null=True)
     codeEntreprise=models.CharField(max_length=255,default="",null=True)
+    image = models.ImageField(upload_to="images/company/",default="",null=True)
     admin=models.ForeignKey(to=SuperAdmin,on_delete=models.PROTECT,null=True)
     class Meta:
         ordering=['nomEntreprise']
@@ -47,7 +48,6 @@ class Offre(models.Model):
     typee = models.CharField(max_length=255,default="",null=True)
     experience = models.IntegerField(default=0,null=True)
     adresse=models.CharField(max_length=255,default="",null=True)
-    image = models.ImageField(upload_to="images/jobs/",default="",null=True)
     deadLine = models.DateField(default=datetime.today().strftime("%Y-%m-%d"),null=True)
     entreprise = models.ForeignKey(to=CompanyAdmin,on_delete=models.CASCADE,null=True)
     postules=models.ManyToManyField(to=User,through="PostuleOffre",through_fields=("offre","user"),null=True)
