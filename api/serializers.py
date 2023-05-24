@@ -32,12 +32,10 @@ class UserSerializer(serializers.ModelSerializer):
             image_ext = image.name.split('.')[-1]
             image_name = f"{user.id}.{image_ext}"
             user.image.save(image_name, image)
-
         if cv:
             cv_ext = cv.name.split('.')[-1]
             cv_name = f"{user.id}.{cv_ext}"
             user.cv.save(cv_name, cv)
-
         if lettre_motivation:
             lm_ext = lettre_motivation.name.split('.')[-1]
             lm_name = f"{user.id}.{lm_ext}"
@@ -70,7 +68,7 @@ class OffreSerializer(serializers.ModelSerializer):
         if image:
             image_ext = image.name.split('.')[-1]
             image_name = f"{offre.id}.{image_ext}"
-            user.image.save(image_name, image)
+            offre.image.save(image_name, image)
 
         return offre
 
