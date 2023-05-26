@@ -7,6 +7,7 @@ import jwt,datetime
 from django.contrib.auth.hashers import make_password, check_password
 from django.core.mail import EmailMessage
 from .crypt import *
+from urllib.parse import urljoin
 ############################################## -- LOGOUT VIEW -- #########################################
 
 class LogoutView(APIView):
@@ -47,7 +48,7 @@ class UserLoginView(APIView):
         payload = {
             'id':user.id,
             'typeUser':'normal',
-            'exp':datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+            'exp':datetime.datetime.utcnow() + datetime.timedelta(days=3),
             'iat':datetime.datetime.utcnow()
         }
         token = jwt.encode(payload,'sesame_jwt',algorithm='HS256').decode('utf-8')
@@ -171,7 +172,7 @@ class SuperAdminLoginView(APIView):
         payload = {
             'id':super_admin.id,
             'typeUser':'super',
-            'exp':datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+            'exp':datetime.datetime.utcnow() + datetime.timedelta(days=3),
             'iat':datetime.datetime.utcnow()
         }
         token = jwt.encode(payload,'sesame_jwt',algorithm='HS256').decode('utf-8')
@@ -403,7 +404,7 @@ class CompanyAdminLoginView(APIView):
         payload = {
             'id':company_admin.id,
             'typeUser':'company',
-            'exp':datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+            'exp':datetime.datetime.utcnow() + datetime.timedelta(days=3),
             'iat':datetime.datetime.utcnow()
         }
         token = jwt.encode(payload,'sesame_jwt',algorithm='HS256').decode('utf-8')
@@ -648,6 +649,7 @@ class PostuleOffreUserView(APIView):
 class PostuleOffreCompanyView(APIView):
     def get(self,request):
         token = request.META.get('HTTP_AUTHORIZATION')
+        basePath = "http://127.0.0.1:8000/"
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -659,9 +661,13 @@ class PostuleOffreCompanyView(APIView):
         if(Offre.objects.filter(entreprise=payload["id"]).exists()):
             offres=Offre.objects.filter(entreprise=payload["id"]).all()
             serializer = OffreSerializer(offres,many=True)
-            
+            image = CompanyAdmin.objects.filter(id=payload["id"]).first()
+            image = CompanyAdminSerializer(image).data["image"]
+            image = urljoin(basePath,image)
+            for o in serializer.data:
+                o["image"]= image
             return Response(serializer.data,status=status.HTTP_200_OK)
-        return Response({"message":"User Does Not Have any Offer"},status=status.HTTP_400_BAD_REQUEST)
+        return Response({"message":"Company Does Not Have any Offer"},status=status.HTTP_400_BAD_REQUEST)
 
     def put(self,request):
         data=request.data.copy()

@@ -29,8 +29,7 @@ class UserSerializer(serializers.ModelSerializer):
 
         # Change the name of the uploaded files
         if image:
-            image_ext = image.name.split('.')[-1]
-            image_name = f"{user.id}.{image_ext}"
+            image_name = f"{user.id}.png"
             user.image.save(image_name, image)
         if cv:
             cv_ext = cv.name.split('.')[-1]
@@ -61,8 +60,7 @@ class CompanyAdminSerializer(serializers.ModelSerializer):
 
         # Change the name of the uploaded files
         if image:
-            image_ext = image.name.split('.')[-1]
-            image_name = f"{company.id}.{image_ext}"
+            image_name = f"{company.id}.png"
             company.image.save(image_name, image)
 
         return company

@@ -151,3 +151,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'mohamedamine.khemiri@sesame.com.tn'
 EMAIL_HOST_PASSWORD = 'SygfkhMi'
+
+
+MEDIA_ROOT = BASE_DIR
+MEDIA_URL = "/"
