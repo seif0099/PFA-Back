@@ -690,3 +690,38 @@ class PostuleOffreCompanyView(APIView):
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response({"message":"Offre Does Not Exist"},status=status.HTTP_400_BAD_REQUEST)
+
+
+#GET ALL POSTULED USERS TO THIS COMPANY OFFERS
+
+class AllPostuledUsersToCompany(APIView):
+    def get(self,request):
+        token = request.META.get('HTTP_AUTHORIZATION')
+        basePath = "http://127.0.0.1:8000/"
+        if not token:
+            return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            payload = jwt.decode(token,'sesame_jwt',algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+        if payload['typeUser'] !='company':
+            return Response({"message":"Permission Denied"}, status=status.HTTP_403_FORBIDDEN)
+        companyId = payload['id']
+        companyoffers = Offre.objects.filter(entreprise=companyId).all()
+        companyOffersSerializer = OffreSerializer(companyoffers,many=True)
+        postules = []
+        for i in companyOffersSerializer.data:
+            if i["postules"]:
+                userData = []
+                for j in i["postules"]:
+                    user = User.objects.filter(id=j).first()
+                    user = UserSerializer(user)
+                    user=user.data
+                    image = user["image"]
+                    image = urljoin(basePath, image)
+                    user["image"] = image
+                    userData.append(user)
+                i["postules"] = userData
+        data = companyOffersSerializer.data
+        data = [i for i in data if i["postules"]]
+        return Response(data,status=status.HTTP_200_OK)
