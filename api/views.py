@@ -717,14 +717,122 @@ class AllPostuledUsersToCompany(APIView):
             if i["postules"]:
                 userData = []
                 for j in i["postules"]:
-                    user = User.objects.filter(id=j).first()
-                    user = UserSerializer(user)
-                    user=user.data
-                    image = user["image"]
-                    image = urljoin(basePath, image)
-                    user["image"] = image
-                    userData.append(user)
+                    postuleState = PostuleOffreSerializer(PostuleOffre.objects.filter(offre=i["id"],user=j).first()).data['etat']
+                    if postuleState ==False:
+                        user = User.objects.filter(id=j).first()
+                        user = UserSerializer(user)
+                        user=user.data
+                        image = user["image"]
+                        image = urljoin(basePath, image)
+                        user["image"] = image
+                        userData.append(user)
                 i["postules"] = userData
         data = companyOffersSerializer.data
         data = [i for i in data if i["postules"]]
         return Response(data,status=status.HTTP_200_OK)
+
+class AcceptRefusePost(APIView):
+    def patch(self,request):
+        token = request.META.get('HTTP_AUTHORIZATION')
+        basePath = "http://127.0.0.1:8000/"
+        if not token:
+            return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            payload = jwt.decode(token,'sesame_jwt',algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+        if payload['typeUser'] !='company':
+            return Response({"message":"Permission Denied"}, status=status.HTTP_403_FORBIDDEN)
+        offreId=request.GET.get("offre")
+        userId = request.GET.get("user")
+        if(PostuleOffre.objects.filter(offre=offreId,user=userId).exists()):
+            userMail = User.objects.filter(id=userId).first()
+            userMail = UserSerializer(userMail).data["email"]
+            offreName = Offre.objects.filter(id=offreId).first()
+            offreName = OffreSerializer(offreName).data['titre']
+            company = CompanyAdmin.objects.filter(id=payload['id']).first()
+            company = CompanyAdminSerializer(company).data["nomEntreprise"]
+            offre=PostuleOffre.objects.filter(offre=offreId,user=userId).first()
+            data={
+                'etat':True
+            }
+            serializer = PostuleOffreSerializer(offre,data=data)
+            if serializer.is_valid():
+                serializer.save()
+                email = EmailMessage(
+                    subject="Job Application Accepted From {} Company".format(company),
+                    body="Thank you for submitting your application To {} job, You are accepted for an interview with us , we will contact you as soon as possible for more details ".format(offreName),
+                    from_email='JOB-BOARD <mohamedamine.khemiri@sesame.com.tn>',
+                    to=[userMail],
+                    )
+                try:
+                    email.send()
+
+                except:
+                    return Response({"message":"Try later !"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"message":"Offre Does Not Exist"},status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self,request):
+        token = request.META.get('HTTP_AUTHORIZATION')
+        basePath = "http://127.0.0.1:8000/"
+        if not token:
+            return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            payload = jwt.decode(token,'sesame_jwt',algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+        if payload['typeUser'] !='company':
+            return Response({"message":"Permission Denied"}, status=status.HTTP_403_FORBIDDEN)
+        offreId=request.GET.get("offre")
+        userId = request.GET.get("user")
+        if(PostuleOffre.objects.filter(offre=offreId,user=userId).exists()):
+            userMail = User.objects.filter(id=userId).first()
+            userMail = UserSerializer(userMail).data["email"]
+            offreName = Offre.objects.filter(id=offreId).first()
+            offreName = OffreSerializer(offreName).data['titre']
+            company = CompanyAdmin.objects.filter(id=payload['id']).first()
+            company = CompanyAdminSerializer(company).data["nomEntreprise"]
+            offre=PostuleOffre.objects.filter(offre=offreId,user=userId).first()
+            email = EmailMessage(
+                subject="Job Application Refused From {} Company".format(company),
+                body="Thank you for submitting your application to {} job , we regret to inform you that we will not be proceeding with your application at this time. We wish you success in your future endeavors and hope to have the opportunity to connect with you in the future. ".format(offreName),
+                from_email='JOB-BOARD <mohamedamine.khemiri@sesame.com.tn>',
+                to=[userMail],
+            )
+            try:
+                email.send()
+                print("hello")
+                offre.delete()
+                return Response({"message":"Done !"}, status=status.HTTP_200_OK)
+            except:
+                return Response({"message":"Try later !"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message":"Error Deleting Application"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"message":"Offre Does Not Exist"},status=status.HTTP_400_BAD_REQUEST)
+
+class GetUserById(APIView):
+    def get(self,request):
+        token = request.META.get('HTTP_AUTHORIZATION')
+        basePath = "http://127.0.0.1:8000/"
+        if not token:
+            return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            payload = jwt.decode(token,'sesame_jwt',algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+        if payload['typeUser'] !='company':
+            return Response({"message":"Permission Denied"}, status=status.HTTP_403_FORBIDDEN)
+        id=request.GET.get("id")
+        user=User.objects.filter(id=id).first()
+        serializer = UserSerializer(user)
+        user = serializer.data
+        image = urljoin(basePath,user['image'])
+        cv = urljoin(basePath,user['cv'])
+        cover = urljoin(basePath,user['lettreMotivation'])
+        user['image']=image
+        user['cv'] = cv
+        user['lettreMotivation'] = cover
+        return Response(user,status=status.HTTP_200_OK)
+
+        

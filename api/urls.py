@@ -21,5 +21,8 @@ urlpatterns =[
     path("offre",OffreView.as_view()),
     path("postuleOffreUser",PostuleOffreUserView.as_view()),
     path("postuleOffreCompany",PostuleOffreCompanyView.as_view()),
-    path("allPostuledUserToCompany",AllPostuledUsersToCompany.as_view())
+    path("allPostuledUserToCompany",AllPostuledUsersToCompany.as_view()),
+    path("aceeptRefusePost",AcceptRefusePost.as_view()),
+    path("getUserById",GetUserById.as_view())
+
 ]
