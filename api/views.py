@@ -63,6 +63,7 @@ class UserLoginView(APIView):
 
 class UserView(APIView):
     def get(self,request):
+        basePath = "http://127.0.0.1:8000/"
         token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -70,9 +71,14 @@ class UserView(APIView):
             payload = jwt.decode(token,'sesame_jwt',algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+        
         user=User.objects.filter(id=payload['id']).first()
         serializer = UserSerializer(user)
-        return Response(serializer.data,status=status.HTTP_200_OK)
+        user = serializer.data
+        image = serializer.data['image']
+        image = urljoin(basePath,image)
+        user['image'] = image
+        return Response(user,status=status.HTTP_200_OK)
 
     def put(self,request):
         data=request.data.copy() 
@@ -84,6 +90,7 @@ class UserView(APIView):
         except jwt.ExpiredSignatureError:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         user=User.objects.filter(id=payload['id']).first()
+        
         try:
             if(data['password']):
                 data['password']=make_password(data['password'])
@@ -497,16 +504,12 @@ class CompanyResetPassView(APIView):
 ############################################## -- OFFRE VIEWS -- #########################################
 class OffresView(APIView):
     def get(self,request):
-        token = request.META.get('HTTP_AUTHORIZATION')
-        if not token:
-            return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
-            payload = jwt.decode(token,'sesame_jwt',algorithms=['HS256'])
-        except jwt.ExpiredSignatureError:
-            return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
-        offres = Offre.objects.all()
-        serializer = OffreSerializer(offres,many=True)
-        return Response(serializer.data,status=status.HTTP_200_OK)
+            offres = Offre.objects.all()
+            serializer = OffreSerializer(offres,many=True)
+            return Response(serializer.data,status=status.HTTP_200_OK)
+        except:
+            return Response({"Message":"Not Found"},status=status.HTTP_400_BAD_REQUEST)
 
 class OffreView(APIView):
     def get(self,request):
