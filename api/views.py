@@ -425,6 +425,7 @@ class CompanyAdminLoginView(APIView):
 
 class CompanyAdminView(APIView):
     def get(self,request):
+        basePath = "http://127.0.0.1:8000/"
         token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -434,7 +435,11 @@ class CompanyAdminView(APIView):
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         company_admin=CompanyAdmin.objects.filter(id=payload['id']).first()
         serializer = CompanyAdminSerializer(company_admin)
-        return Response(serializer.data,status=status.HTTP_200_OK)
+        company = serializer.data
+        image = company['image']
+        image = urljoin(basePath,image)
+        company["image"] = image
+        return Response(company,status=status.HTTP_200_OK)
 
     def put(self,request):
         data=request.data.copy() 
