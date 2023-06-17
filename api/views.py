@@ -509,16 +509,22 @@ class CompanyResetPassView(APIView):
 ############################################## -- OFFRE VIEWS -- #########################################
 class OffresView(APIView):
     def get(self,request):
+        basePath = "http://127.0.0.1:8000/"
         try:
             offres = Offre.objects.all()
-            serializer = OffreSerializer(offres,many=True)
-            return Response(serializer.data,status=status.HTTP_200_OK)
+            offres = OffreSerializer(offres,many=True).data
+            for offre in offres:
+                image = CompanyAdmin.objects.filter(id=offre['entreprise']).first()
+                image = CompanyAdminSerializer(image).data['image']
+                offre['image'] = urljoin(basePath,image)
+            return Response(offres,status=status.HTTP_200_OK)
         except:
             return Response({"Message":"Not Found"},status=status.HTTP_400_BAD_REQUEST)
 
 class OffreView(APIView):
     def get(self,request):
         token = request.META.get('HTTP_AUTHORIZATION')
+        basePath = "http://127.0.0.1:8000/"
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
