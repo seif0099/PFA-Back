@@ -582,6 +582,27 @@ class OffreView(APIView):
             offre.delete()
             return Response({"message":"User Deleted"},status=status.HTTP_200_OK)
         return Response({"message":"Offre Does Not Exist"},status=status.HTTP_400_BAD_REQUEST)
+    
+
+    def get(self, request, name):
+        token = request.META.get('HTTP_AUTHORIZATION')
+        if not token:
+            return Response({"message": "Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        try:
+            payload = jwt.decode(token, 'sesame_jwt', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            return Response({"message": "Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        if not name:
+            return Response({"message": "Invalid name"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        offre = Offre.objects.filter(titre__iexact=name).first()
+        if offre:
+            serializer = OffreSerializer(offre)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({"message": "Offre not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 ############################################## -- POSTULE OFFRE VIEWS -- #########################################
