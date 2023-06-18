@@ -385,7 +385,7 @@ class SuperAdminManageCompanyAdminView(APIView):
 ############################################## -- COMPANY ADMIN VIEWS -- #########################################
 
 
-class  CompanyAdminRegisterView(APIView):
+class CompanyAdminRegisterView(APIView):
     def post(self,request):
         data=request.data.copy() 
         if CompanyAdmin.objects.filter(email=data['email']).exists():
@@ -472,7 +472,7 @@ class CompanyResetPassView(APIView):
         cryptetId = cryptetId.decode('utf-8')
         email = EmailMessage(
             subject="Reset Password",
-            body="You can follow this link to reset your password : http://localhost:3000/user/resetPass?uid={}".format(cryptetId),
+            body="You can follow this link to reset your password : http://localhost:3000/company/resetPass?uid={}".format(cryptetId),
             from_email='JOB-BOARD <mohamedamine.khemiri@sesame.com.tn>',
             to=[email],
         )
@@ -491,7 +491,7 @@ class CompanyResetPassView(APIView):
         except:
             return Response({"message":"Company does not exist !"}, status=status.HTTP_400_BAD_REQUEST)
         company=CompanyAdmin.objects.filter(id=uid).first()
-        if user is None:
+        if company is None:
             return Response({"message":"Company does not exist !"}, status=status.HTTP_400_BAD_REQUEST)
         try:
             if(data['password']):
@@ -604,6 +604,7 @@ class OffreView(APIView):
 class PostuleOffreUserView(APIView):
     def get(self,request):
         token = request.META.get('HTTP_AUTHORIZATION')
+        basePath = "http://127.0.0.1:8000/"
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
@@ -619,12 +620,15 @@ class PostuleOffreUserView(APIView):
             for offre in serializer.data:
                 offre1=Offre.objects.filter(id=offre['offre']).first()
                 serializerOffres = OffreSerializer(offre1)
-                offres.append(serializerOffres.data)
+                offre1 = serializerOffres.data
+                companyImage = CompanyAdmin.objects.filter(id=offre1['entreprise']).first()
+                companyImage = CompanyAdminSerializer(companyImage).data['image']
+                offre1['image'] = urljoin(basePath,companyImage)
+                offres.append(offre1)
             return Response(offres,status=status.HTTP_200_OK)
         return Response({"message":"User Does Not Have any Offer"},status=status.HTTP_400_BAD_REQUEST)
 
     def post(self,request):
-        data=request.data.copy()
         token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -637,8 +641,10 @@ class PostuleOffreUserView(APIView):
         offreId = request.GET.get("id")
         if(PostuleOffre.objects.filter(user=payload["id"],offre=offreId).exists()):
             return Response({"message":"User already applied to this offer"},status=status.HTTP_400_BAD_REQUEST)
-        data["user"]=payload["id"]
-        data["offre"]=offreId
+        data = {
+            "user" : payload["id"],
+            "offre" : offreId,
+        }
         serializer = PostuleOffreSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
@@ -646,7 +652,6 @@ class PostuleOffreUserView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self,request):
-        data=request.data.copy()
         token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -656,9 +661,12 @@ class PostuleOffreUserView(APIView):
             return Response({"message":"Unauthenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         if payload['typeUser'] !='normal':
             return Response({"message":"Permission Denied"}, status=status.HTTP_403_FORBIDDEN)
-        offrePostuleId = request.GET.get("id")
-        if(PostuleOffre.objects.filter(id=offrePostuleId).exists()):
-            offrePostule=PostuleOffre.objects.filter(id=offrePostuleId).first()
+        offreId = request.GET.get("id")
+        print(offreId)
+        print(payload['id'])
+        if(PostuleOffre.objects.filter(offre=offreId,user=payload['id']).exists()):
+            offrePostule=PostuleOffre.objects.filter(offre=offreId,user=payload['id']).first()
+            print("hello")
             offrePostule.delete()
             return Response({"message":"User Deleted"},status=status.HTTP_200_OK)
         return Response({"message":"Offre Does Not Exist"},status=status.HTTP_400_BAD_REQUEST)
